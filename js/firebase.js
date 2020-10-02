@@ -1,4 +1,12 @@
 $(function () {
+  // instantiation of modal
+  const dialogs = document.querySelectorAll('.mdc-dialog');
+  const dialogInstances = {}
+  dialogs.forEach(dialog => {
+    const modalId = dialog.dataset.modalId;
+    dialogInstances[modalId] = new mdc.dialog.MDCDialog(dialog);
+  })
+
   window.__DSCAuthPromise = new Promise(function (resolve) {
     firebase.auth().onAuthStateChanged(function(user) {
       if (user) {
@@ -20,10 +28,17 @@ $(function () {
   })
   $('#loginForm').on('submit', function (event) {
     event.preventDefault();
-    $('#errorAlert').hide();
-    $('#messageDsiplayArea').text('');
+
+    const loginBtn = $('.login-button');
+    const dialogMessage = $('#my-dialog-content');
+
+    // disable button and change the text
+    loginBtn.attr('disabled', true);
+    loginBtn.text('please wait...');
+
     var email = $('#inputEmail').val();
     var password =  $('#inputPassword').val();
+
     firebase.auth().signInWithEmailAndPassword(email, password)
       .catch(function(error) {
         // Handle Errors here.
@@ -40,8 +55,15 @@ $(function () {
         } else {
           shownErrorMessage = 'An unknown error occured (Code ' + errorCode + ')'
         }
-        $('#messageDisplayArea').text(shownErrorMessage);
-        $('#errorAlert').show();
+
+        // update dialog message
+        dialogMessage.text(shownErrorMessage);
+        // show error message
+        dialogInstances["error-message"].open();
+
+        //enable button and change the text back
+        loginBtn.attr('disabled', false);
+        loginBtn.text('login');
       });
   });
   $('#logoutButton').on('click', function (event) {
